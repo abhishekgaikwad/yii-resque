@@ -1,4 +1,5 @@
 <?php
+namespace resque\components;
 /**
  * This file part of RResque
  *

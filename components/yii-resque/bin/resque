@@ -1,5 +1,7 @@
 #!/usr/bin/env php
 <?php
+use resque\components\ResqueAutoloader;
+
 $includeFiles=getenv('INCLUDE_FILES');
 if ($includeFiles) {
     $includeFiles = explode(',', $includeFiles);
@@ -8,38 +10,24 @@ if ($includeFiles) {
     }
 }
 
+require(__DIR__ . '/../../../autoload.php');
+require(__DIR__ . '/../../../yiisoft/yii2/Yii.php');
+$config = require(__DIR__ . '/../../../../config/console.php');
+
+$application = new yii\console\Application($config);
+
 $yiic=getenv('YII_PATH').'/yii.php';
 $config=getenv('APP_PATH').'/config/console.php';
 
-require_once($yiic);
-
-Yii::createConsoleApplication($config);
-
 # Turn off our amazing library autoload
-spl_autoload_unregister(array('YiiBase','autoload'));
+spl_autoload_unregister(array('Yii','autoload'));
 
-    // Find and initialize Composer
-    $files = array(
-        dirname(__FILE__) . '/../RResqueAutoloader.php',
-    );
-
-    foreach ($files as $file) {
-        if (file_exists($file)) {
-            require_once $file;
-            break;
-        }
-    }
-
-    if (!class_exists('RResqueAutoloader', false)) {
-        die(
-            'Can not load RResqueAutoloader in yii-resque folder.'
-        );
-    } else {
-        RResqueAutoloader::register();
-    }
+require_once(dirname(__FILE__) . '/../ResqueAutoloader.php');
+ResqueAutoloader::register();
 
 # Give back the power to Yii
-spl_autoload_register(array('YiiBase','autoload'));
+spl_autoload_register(array('Yii','autoload'));
+
 
 $QUEUE = getenv('QUEUE');
 if(empty($QUEUE)) {

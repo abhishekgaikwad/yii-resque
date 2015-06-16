@@ -4,7 +4,7 @@ namespace resque\console;
 use Yii;
 use yii\console\Controller;
 
-class ResqueCommand extends Controller
+class ResqueController extends Controller
 {
 
     public $defaultAction = 'index';

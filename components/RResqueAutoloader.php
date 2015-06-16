@@ -1,5 +1,7 @@
 <?php
 namespace resque\components;
+
+use \yii\BaseYii;
 /**
  * This file part of RResque
  *

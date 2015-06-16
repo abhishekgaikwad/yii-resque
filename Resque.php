@@ -1,4 +1,5 @@
-<?php
+<?php namespace resque;
+
 /**
  * Yii Resque Component
  *
@@ -16,9 +17,13 @@
  * @since         0.1
  * @license       MIT License (http://www.opensource.org/licenses/mit-license.php)
  */
+use resque\components\ResqueAutoloader;
+use resque\lib\Resque;
+use resque\lib\ResqueScheduler;
 
-class RResque extends CApplicationComponent
+class Resque extends \yii\base\Component
 {
+
     /**
      * @var string Redis server address
      */
@@ -38,23 +43,7 @@ class RResque extends CApplicationComponent
      * @var string Redis password auth
      */
     public $password = '';
-
-    /**
-     * @var string
-     */
     public $prefix = '';
-
-    /**
-     * Log handler for Monolog
-     * @var string
-     */
-    public $loghandler = null;
-
-    /**
-     * Log handler target for Monolog
-     * @var string
-     */
-    public $logtarget = null;
 
     /**
      * @var mixed include file in daemon (userul for defining YII_DEBUG, etc), may be string or array
@@ -67,26 +56,23 @@ class RResque extends CApplicationComponent
     public function init()
     {
         parent::init();
-        
-        if(!class_exists('RResqueAutoloader', false)) {
-            # Turn off our amazing library autoload
-            spl_autoload_unregister(array('YiiBase','autoload'));
 
+        if (!class_exists('ResqueAutoloader', false)) {
+
+            # Turn off our amazing library autoload
+            spl_autoload_unregister(['Yii', 'autoload']);
             # Include Autoloader library
-            include(dirname(__FILE__) . '/RResqueAutoloader.php');
+            include(dirname(__FILE__) . '/ResqueAutoloader.php');
 
             # Run request autoloader
-            RResqueAutoloader::register();
-
+            ResqueAutoloader::register();
             # Give back the power to Yii
-            spl_autoload_register(array('YiiBase','autoload'));
+            spl_autoload_register(array('Yii', 'autoload'));
         }
-
         Resque::setBackend($this->server . ':' . $this->port, $this->database, $this->password);
         if ($this->prefix) {
-          Resque::redis()->prefix($this->prefix);    
+            Resque::redis()->prefix($this->prefix);
         }
-        
     }
 
     /**
@@ -95,34 +81,13 @@ class RResque extends CApplicationComponent
      * @param string $queue The name of the queue to place the job in.
      * @param string $class The name of the class that contains the code to execute the job.
      * @param array $args Any optional arguments that should be passed when the job is executed.
-     * @param bool $track_status Enable track status
      *
      * @return string
      */
     public function createJob($queue, $class, $args = array(), $track_status = false)
     {
-        return Resque::enqueue($queue, $class, $args, $track_status);
-    }
 
-    /**
-     * Delete a job based on job id or key, if worker_class is empty then it'll remove
-     * all jobs within the queue, if job_key is empty then it'll remove all jobs within
-     * provided queue and worker_class
-     *
-     * @param string $queue The name of the queue to place the job in.
-     * @param string $worker_class The name of the class that contains the code to execute the job.
-     * @param string $job_key Job key
-     * 
-     * @return bool
-     */
-    public function deleteJob($queue, $worker_class = null, $job_key = null)
-    {
-        if (!empty($job_key) && !empty($worker_class))
-            return Resque::dequeue($queue, array($worker_class => $job_key)); // Remove job with specific job key
-        else if (!empty($worker_class) && empty($job_key))
-            return Resque::dequeue($queue, array($worker_class)); // Remove all jobs inside specified worker and queue
-        else 
-            return Resque::dequeue($queue); // Remove all jobs inside queue
+        return Resque::enqueue($queue, $class, $args, $track_status);
     }
 
     /**
@@ -132,13 +97,12 @@ class RResque extends CApplicationComponent
      * @param string $queue The name of the queue to place the job in.
      * @param string $class The name of the class that contains the code to execute the job.
      * @param array $args Any optional arguments that should be passed when the job is executed.
-     * @param bool $track_status Enable track status
      *
      * @return string
      */
-    public function enqueueJobIn($in, $queue, $class, $args = array(), $track_status = false)
+    public function enqueueJobIn($in, $queue, $class, $args = array())
     {
-        return ResqueScheduler::enqueueIn($in, $queue, $class, $args, $track_status);
+        return ResqueScheduler::enqueueIn($in, $queue, $class, $args);
     }
 
     /**
@@ -148,13 +112,13 @@ class RResque extends CApplicationComponent
      * @param string $queue The name of the queue to place the job in.
      * @param string $class The name of the class that contains the code to execute the job.
      * @param array $args Any optional arguments that should be passed when the job is executed.
-     * @param bool $track_status Enable track status
-     * 
+     *
      * @return string
      */
-    public function enqueueJobAt($at, $queue, $class, $args = array(), $track_status = false)
+    public function enqueueJobAt($at, $queue, $class, $args = array())
     {
-        return ResqueScheduler::enqueueAt($at, $queue, $class, $args, $track_status);
+
+        return ResqueScheduler::enqueueAt($at, $queue, $class, $args);
     }
 
     /**
@@ -164,7 +128,7 @@ class RResque extends CApplicationComponent
      */
     public function getDelayedJobsCount()
     {
-        return (int)Resque::redis()->zcard(ResqueScheduler::QUEUE_NAME);
+        return (int) Resque::redis()->zcard('delayed_queue_schedule');
     }
 
     /**
@@ -181,41 +145,6 @@ class RResque extends CApplicationComponent
     }
 
     /**
-     * Convert int status into readable string
-     * 
-     * @param  int  $status     Status Code
-     * @return string
-     */
-    public function statusToString($status)
-    {
-        switch ($status) {
-            case Resque_Job_Status::STATUS_WAITING:
-                return "Waiting";
-                break;
-
-            case Resque_Job_Status::STATUS_RUNNING:
-                return "Running";
-                break;
-
-            case Resque_Job_Status::STATUS_FAILED:
-                return "Failed";
-                break;
-
-            case Resque_Job_Status::STATUS_COMPLETE:
-                return "Failed";
-                break;
-
-            case ResqueScheduler_Job_Status::STATUS_SCHEDULED:
-                return "Scheduled";
-                break;
-            
-            default:
-                return null;
-                break;
-        }
-    }
-
-    /**
      * Return Redis
      *
      * @return object Redis instance
@@ -225,13 +154,16 @@ class RResque extends CApplicationComponent
         return Resque::redis();
     }
 
-   /**
+    /**
      * Get queues
      *
      * @return object Redis instance
      */
     public function getQueues()
     {
-        return $this->redis()->zRange('resque:' . ResqueScheduler::QUEUE_NAME, 0, -1);
+        return $this->redis()->zRange('delayed_queue_schedule', 0, -1);
     }
+//    public function getValueByKey($key){
+//        return $this->redis()->get($key);
+//    }
 }

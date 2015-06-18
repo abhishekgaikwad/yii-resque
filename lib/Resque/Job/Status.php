@@ -6,6 +6,8 @@
  * @author		Chris Boulton <chris@bigcommerce.com>
  * @license		http://www.opensource.org/licenses/mit-license.php
  */
+namespace resque\lib\Resque\Job;
+use resque\lib\Resque;
 class Resque_Job_Status
 {
 	const STATUS_WAITING = 1;
@@ -48,14 +50,14 @@ class Resque_Job_Status
 	 *
 	 * @param string $id The ID of the job to monitor the status of.
 	 */
-	public static function create($id, $status = null)
+	public static function create($id, $status = self::STATUS_WAITING)
 	{
 		$statusPacket = array(
-			'status' => (!empty($status)) ? $status : self::STATUS_WAITING,
+			'status' => $status,
 			'updated' => time(),
 			'started' => time(),
 		);
-		return Resque::redis()->set('job:' . $id . ':status', json_encode($statusPacket));
+		Resque::redis()->set('job:' . $id . ':status', json_encode($statusPacket));
 	}
 
 	/**

@@ -17,9 +17,9 @@
  * @since         0.1
  * @license       MIT License (http://www.opensource.org/licenses/mit-license.php)
  */
-use resque\components\ResqueAutoloader;
-use resque\lib\Resque;
-use resque\lib\ResqueScheduler;
+use resque\ResqueAutoloader;
+//use resque\lib\Resque;
+//use resque\lib\ResqueScheduler;
 
 class Resque extends \yii\base\Component
 {
@@ -69,7 +69,7 @@ class Resque extends \yii\base\Component
             # Give back the power to Yii
             spl_autoload_register(array('Yii', 'autoload'));
         }
-        Resque::setBackend($this->server . ':' . $this->port, $this->database, $this->password);
+        \resque\lib\Resque::setBackend($this->server . ':' . $this->port, $this->database, $this->password);
         if ($this->prefix) {
             Resque::redis()->prefix($this->prefix);
         }
@@ -87,7 +87,7 @@ class Resque extends \yii\base\Component
     public function createJob($queue, $class, $args = array(), $track_status = false)
     {
 
-        return Resque::enqueue($queue, $class, $args, $track_status);
+        return \resque\lib\Resque::enqueue($queue, $class, $args, $track_status);
     }
 
     /**
@@ -102,7 +102,7 @@ class Resque extends \yii\base\Component
      */
     public function enqueueJobIn($in, $queue, $class, $args = array())
     {
-        return ResqueScheduler::enqueueIn($in, $queue, $class, $args);
+        return \resque\lib\ResqueScheduler::enqueueIn($in, $queue, $class, $args);
     }
 
     /**
@@ -118,7 +118,7 @@ class Resque extends \yii\base\Component
     public function enqueueJobAt($at, $queue, $class, $args = array())
     {
 
-        return ResqueScheduler::enqueueAt($at, $queue, $class, $args);
+        return \resque\lib\ResqueScheduler::enqueueAt($at, $queue, $class, $args);
     }
 
     /**
@@ -128,7 +128,7 @@ class Resque extends \yii\base\Component
      */
     public function getDelayedJobsCount()
     {
-        return (int) Resque::redis()->zcard('delayed_queue_schedule');
+        return (int) \resque\lib\Resque::redis()->zcard('delayed_queue_schedule');
     }
 
     /**
@@ -151,7 +151,7 @@ class Resque extends \yii\base\Component
      */
     public function redis()
     {
-        return Resque::redis();
+        return  \resque\lib\Resque::redis();
     }
 
     /**

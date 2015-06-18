@@ -1,4 +1,6 @@
 <?php
+namespace resque\lib\Resque;
+
 /**
  * Resque event/plugin system class
  *

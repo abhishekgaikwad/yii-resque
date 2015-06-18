@@ -19,7 +19,7 @@
 // namespace MonologInit;
 
 // use Monolog\Handler;
-
+namespace resque\lib\MonologInit;
 class MonologInit_MonologInit
 {
     public $handler = null;

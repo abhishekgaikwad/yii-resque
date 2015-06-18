@@ -1,4 +1,6 @@
 <?php
+namespace resque\lib\Credis;
+use resque\lib\Resque\Resque_Exception;
 /**
  * Credis_Client (a fork of Redisent)
  *
@@ -25,8 +27,10 @@ if( ! defined('CRLF')) define('CRLF', sprintf('%s%s', chr(13), chr(10)));
 /**
  * Credis-specific errors, wraps native Redis errors
  */
-class CredisException extends Exception {
-}
+//include(dirname(__FILE__) . '/../Resque/Exception.php');
+//        
+//class CredisException extends Exception {
+//}
 
 /**
  * Credis_Client, a lightweight Redis PHP standalone client and phpredis wrapper
@@ -114,6 +118,7 @@ class CredisException extends Exception {
  * @method int           rPush(string $key, mixed $value, mixed $valueN = null)
  * @method int           rPushX(string $key, mixed $value)
  */
+
 class Credis_Client {
 
     const TYPE_STRING      = 'string';
@@ -243,6 +248,8 @@ class Credis_Client {
         $this->timeout = $timeout;
         $this->persistent = (string) $persistent;
         $this->standalone = ! extension_loaded('redis');
+        
+			
     }
 
     public function __destruct()
@@ -768,10 +775,6 @@ class Credis_Client {
 
     private static function _map($arg)
     {
-         if (is_array($arg)) {
-            $arg = implode(' ', $arg);
-        }
-        
         return sprintf('$%d%s%s', strlen($arg), CRLF, $arg);
     }
 

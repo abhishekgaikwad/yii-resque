@@ -1,7 +1,7 @@
 <?php
-namespace resque\components;
+namespace resque;
 
-use \yii\BaseYii;
+use Yii;
 /**
  * This file part of RResque
  *
@@ -10,14 +10,16 @@ use \yii\BaseYii;
  * For license and full copyright information please see main package file
  * @package       yii-resque
  */
-class RResqueAutoloader
+class ResqueAutoloader
 {
     /**
      * Registers Raven_Autoloader as an SPL autoloader.
      */
     static public function register()
     {
-        Yii::registerAutoloader(array(new self,'autoload'),true);
+        spl_autoload_unregister(['Yii', 'autoload']);
+        spl_autoload_register([new self,'autoload']);
+        spl_autoload_register(['Yii', 'autoload'], true, true);
     }
 
     /**
@@ -38,5 +40,13 @@ class RResqueAutoloader
         } else if (is_file($file = dirname(__FILE__).'/lib/'.str_replace(array('\\', "\0"), array('/', ''), $class).'.php')) {
             require $file;
         }
+        
+        require_once(dirname(__FILE__) . '/lib/Resque/Job.php');
+        require_once(dirname(__FILE__) . '/lib/Resque/Event.php');
+        require_once(dirname(__FILE__) . '/lib/Resque/Redis.php');
+        require_once(dirname(__FILE__) . '/lib/Resque/Worker.php');
+        require_once(dirname(__FILE__) . '/lib/Resque/Stat.php');
+        require_once(dirname(__FILE__) . '/lib/Resque/Job/Status.php');
+        require_once(dirname(__FILE__) . '/lib/Resque/Exception.php');
     }
 }

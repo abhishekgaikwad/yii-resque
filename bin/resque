@@ -1,6 +1,8 @@
 #!/usr/bin/env php
 <?php
-use resque\components\ResqueAutoloader;
+use resque\ResqueAutoloader;
+use resque\lib\Resque ;
+use resque\lib\Resque\Resque_Worker ;
 
 $includeFiles=getenv('INCLUDE_FILES');
 if ($includeFiles) {
@@ -12,12 +14,15 @@ if ($includeFiles) {
 
 require(__DIR__ . '/../../../autoload.php');
 require(__DIR__ . '/../../../yiisoft/yii2/Yii.php');
-$config = require(__DIR__ . '/../../../../config/console.php');
+
+$config = yii\helpers\ArrayHelper::merge(
+    require(__DIR__ . '/../../../../common/config/main.php'),
+    require(__DIR__ . '/../../../../common/config/main-local.php'),
+    require(__DIR__ . '/../../../../console/config/main.php'),
+    require(__DIR__ . '/../../../../console/config/main-local.php')
+) ;
 
 $application = new yii\console\Application($config);
-
-$yiic=getenv('YII_PATH').'/yii.php';
-$config=getenv('APP_PATH').'/config/console.php';
 
 # Turn off our amazing library autoload
 spl_autoload_unregister(array('Yii','autoload'));
